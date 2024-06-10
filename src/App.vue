@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+
+defineProps<{
+  msg: string
+}>()
+
+const str = ref('')
+
 </script>
 
 <template>
