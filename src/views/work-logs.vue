@@ -28,13 +28,14 @@ const removeWorkLog = async (data: any) => {
   <div>
     <p class="text-2xl font-medium">Work logs</p>
     <DataTable
+      class="border-round-md p-3 bg-white"
       v-model:editingRows="editingRows"
       :value="allLogWorks"
-      size="small"
       editMode="row"
+      size="small"
       @row-edit-save="onRowEditSave"
     >
-      <Column field="date" header="Date"> </Column>
+      <Column field="date" header="Date"></Column>
       <Column field="task" header="Task">
         <template #editor="{ data, field }">
           <InputText v-model="data[field]" />
@@ -49,9 +50,9 @@ const removeWorkLog = async (data: any) => {
       <Column bodyStyle="text-align:center">
         <template #body="slotProps">
           <Button
-            size="small"
             icon="pi pi-times"
             severity="danger"
+            class="h-2rem w-2rem"
             text
             rounded
             @click="removeWorkLog(slotProps.data)"

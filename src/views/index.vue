@@ -12,7 +12,7 @@ const viewAllLogWorks = async () => {
 <template>
   <div>
     <div class="grid">
-      <div class="sm:col-6 lg:col-2">
+      <div class="sm:col-6 lg:col-3">
         <Card>
           <template #title> Log work</template>
           <template #footer>
