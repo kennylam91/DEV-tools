@@ -38,4 +38,4 @@ jobs:
           AWS_REGION: 'ap-southeast-1'
         run: |
           npm install -g aws-cli
-          aws s3 sync dist/ s3://your-s3-bucket-name --delete
+          aws s3 sync dist/ s3://dev-tools-app --delete
