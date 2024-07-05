@@ -2,35 +2,50 @@
 import { getWorkLogService } from '@/services/work-log-service'
 
 // all log work dialog
-const allLogWorks = ref()
+const allWorkLogs = ref()
 const workLogService = getWorkLogService()
 
-workLogService.getAll().then((res) => {
-  allLogWorks.value = res
-})
+const getAllWorkLogs = () => {
+  workLogService.getAll().then((res) => {
+    allWorkLogs.value = res
+  })
+}
+
+getAllWorkLogs()
 
 const editingRows = ref([])
 
 const onRowEditSave = async (event: any) => {
-  let { newData, index } = event
+  let { newData } = event
 
   await workLogService.createOrUpdate(newData)
-  allLogWorks.value = await workLogService.getAll()
+  allWorkLogs.value = await workLogService.getAll()
 }
 
 const removeWorkLog = async (data: any) => {
   await workLogService.delete(data.date)
-  allLogWorks.value = await workLogService.getAll()
+  allWorkLogs.value = await workLogService.getAll()
+}
+
+const logWorkDialogVisible = ref(false)
+const addNew = () => {
+  logWorkDialogVisible.value = true
+}
+const onSave = () => {
+  logWorkDialogVisible.value = false
+  getAllWorkLogs()
 }
 </script>
 
 <template>
-  <div>
-    <p class="text-2xl font-medium">Work logs</p>
+  <div class="border-round-md p-5 bg-white">
+    <div class="flex flex-wrap justify-content-between">
+      <p class="text-2xl font-bold mt-0">Work logs</p>
+      <Button text icon="pi pi-plus" label="Add" @click="addNew" />
+    </div>
     <DataTable
-      class="border-round-md p-3 bg-white"
       v-model:editingRows="editingRows"
-      :value="allLogWorks"
+      :value="allWorkLogs"
       editMode="row"
       size="small"
       @row-edit-save="onRowEditSave"
@@ -60,6 +75,9 @@ const removeWorkLog = async (data: any) => {
         </template>
       </Column>
     </DataTable>
+    <Dialog v-model:visible="logWorkDialogVisible" modal header="Log your work">
+      <LogWorkForm @cancel="logWorkDialogVisible = false" @save="onSave" />
+    </Dialog>
   </div>
 </template>
 
