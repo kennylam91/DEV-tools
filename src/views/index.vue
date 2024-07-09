@@ -28,6 +28,21 @@ const viewAllLogWorks = async () => {
           </template>
         </Card>
       </div>
+      <div class="sm:col-6 lg:col-3">
+        <Card>
+          <template #title> Base64</template>
+          <template #footer>
+            <div class="flex gap-1 flex-column">
+              <router-link to="/base64/decode">
+                <Button label="Decode" class="w-full" />
+              </router-link>
+              <router-link to="/base64/encode">
+                <Button label="Encode" severity="secondary" class="w-full" />
+              </router-link>
+            </div>
+          </template>
+        </Card>
+      </div>
     </div>
   </div>
 

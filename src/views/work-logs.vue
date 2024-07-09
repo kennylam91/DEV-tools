@@ -40,7 +40,7 @@ const onSave = () => {
 <template>
   <div class="border-round-md p-5 bg-white">
     <div class="flex flex-wrap justify-content-between">
-      <p class="text-2xl font-bold mt-0">Work logs</p>
+      <p class="page-title">Work logs</p>
       <Button text icon="pi pi-plus" label="Add" @click="addNew" />
     </div>
     <DataTable
