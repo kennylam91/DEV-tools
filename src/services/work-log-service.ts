@@ -44,7 +44,11 @@ class WorkLogServiceByLocalStorage implements WorkLogService {
   }
 
   getAll() {
-    return Promise.resolve(JSON.parse(localStorage.getItem(this.username) || '[]'))
+    const data: WorkLog[] = JSON.parse(localStorage.getItem(this.username) || '[]')
+    data.sort((log1, log2) => {
+      return Date.parse(log1.date) - Date.parse(log2.date)
+    })
+    return Promise.resolve(data)
   }
 }
 
