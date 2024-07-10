@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@vueuse/core": "^10.11.0",
     "date-fns": "^3.6.0",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
