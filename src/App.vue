@@ -9,6 +9,16 @@ const items = ref([
     label: 'Work Log',
     icon: 'pi pi-bookmark',
     route: '/work-logs'
+  },
+  {
+    label: 'Base64',
+    items: [
+      { label: 'Encode', route: '/base64/encode' },
+      {
+        label: 'Decode',
+        route: '/base64/decode'
+      }
+    ]
   }
 ])
 
@@ -16,7 +26,7 @@ defineProps<{}>()
 </script>
 
 <template>
-  <div class="flex gap-5 px-5 py-5 bg-gray-100">
+  <div class="flex gap-5 px-5 py-5 bg-gray-100 min-h-screen">
     <Menu :model="items">
       <template #item="{ item, props }">
         <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
