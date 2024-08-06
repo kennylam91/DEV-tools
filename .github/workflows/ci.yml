@@ -19,6 +19,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Determine branch name
+        id: extract_branch
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "Branch name: ${{ github.head_ref }}"
+            echo "::set-output name=branch::${{ github.head_ref }}"
+          else
+            echo "Branch name: ${GITHUB_REF#refs/heads/}"
+            echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+          fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -39,3 +50,15 @@ jobs:
         run: |
           npm install -g aws-cli
           aws s3 sync dist/ s3://dev-tools-app --delete
+      - name: Licensight scan for branch
+        run: |
+          curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/latest/linux/licensight-scan
+          chmod +x $RUNNER_TEMP/licensight-scan
+          $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
+
+      - name: Licensight scan for tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        run: |
+          curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/latest/linux/licensight-scan
+          chmod +x $RUNNER_TEMP/licensight-scan
+          $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -t ${{ github.ref_name }}
