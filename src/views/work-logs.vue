@@ -3,15 +3,16 @@ import { getWorkLogService } from '@/services/work-log-service'
 
 // all log work dialog
 const allWorkLogs = ref()
+const selectedMonth = ref(new Date())
 const workLogService = getWorkLogService()
 
-const getAllWorkLogs = () => {
-  workLogService.getAll().then((res) => {
+const getAllWorkLogs = (month: number) => {
+  workLogService.getAll(month).then((res) => {
     allWorkLogs.value = res
   })
 }
 
-getAllWorkLogs()
+getAllWorkLogs(selectedMonth.value.getMonth())
 
 const editingRows = ref([])
 
@@ -19,12 +20,12 @@ const onRowEditSave = async (event: any) => {
   let { newData } = event
 
   await workLogService.createOrUpdate(newData)
-  allWorkLogs.value = await workLogService.getAll()
+  allWorkLogs.value = await workLogService.getAll(selectedMonth.value.getMonth())
 }
 
 const removeWorkLog = async (data: any) => {
   await workLogService.delete(data.date)
-  allWorkLogs.value = await workLogService.getAll()
+  allWorkLogs.value = await workLogService.getAll(selectedMonth.value.getMonth())
 }
 
 const logWorkDialogVisible = ref(false)
@@ -33,15 +34,25 @@ const addNew = () => {
 }
 const onSave = () => {
   logWorkDialogVisible.value = false
-  getAllWorkLogs()
+  getAllWorkLogs(selectedMonth.value.getMonth())
 }
+
+watch(
+  () => selectedMonth.value,
+  (newMonthDate) => {
+    getAllWorkLogs(newMonthDate.getMonth())
+  }
+)
 </script>
 
 <template>
   <div class="border-round-md p-5 bg-white">
     <div class="flex flex-wrap justify-content-between">
       <p class="page-title">Work logs</p>
-      <Button text icon="pi pi-plus" label="Add" @click="addNew" />
+      <div class="flex gap-2">
+        <Calendar v-model="selectedMonth" view="month" dateFormat="mm/yy" :max-date="new Date()" />
+        <Button text icon="pi pi-plus" label="Add" @click="addNew" />
+      </div>
     </div>
     <DataTable
       v-model:editingRows="editingRows"
