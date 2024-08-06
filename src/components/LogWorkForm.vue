@@ -14,7 +14,7 @@ const workLogForm = reactive({
 const saveLogWork = async () => {
   // call api to save
   const newWorkLog: WorkLog = {
-    date: format(workLogForm.date, 'dd-MM-yyyy'),
+    date: format(workLogForm.date, 'yyyy-MM-dd'),
     task: workLogForm.task,
     username: 'lampv'
   }
@@ -32,7 +32,7 @@ const saveLogWork = async () => {
     <div class="col-6">
       <div class="flex flex-column gap-2">
         <label for="dateInput">Date</label>
-        <Calendar v-model="workLogForm.date" view="date" />
+        <Calendar v-model="workLogForm.date" view="date" :max-date="new Date()" />
       </div>
     </div>
     <div class="col-6">

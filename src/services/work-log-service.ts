@@ -2,7 +2,7 @@ import type { WorkLog } from '@/models/work-log'
 
 export interface WorkLogService {
   createOrUpdate: (workLog: WorkLog) => Promise<void>
-  getAll: () => Promise<WorkLog[]>
+  getAll: (month: number) => Promise<WorkLog[]>
   delete: (date: string) => Promise<void>
 }
 
@@ -43,12 +43,15 @@ class WorkLogServiceByLocalStorage implements WorkLogService {
     return Promise.resolve()
   }
 
-  getAll() {
+  getAll(month: number) {
     const data: WorkLog[] = JSON.parse(localStorage.getItem(this.username) || '[]')
-    data.sort((log1, log2) => {
+    const workLogsInMonth = data.filter((item) => {
+      return month + 1 === Number.parseInt(item.date.split('-')[1])
+    })
+    workLogsInMonth.sort((log1, log2) => {
       return Date.parse(log1.date) - Date.parse(log2.date)
     })
-    return Promise.resolve(data)
+    return Promise.resolve(workLogsInMonth)
   }
 }
 
