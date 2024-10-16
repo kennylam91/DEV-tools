@@ -56,6 +56,12 @@ jobs:
           chmod +x $RUNNER_TEMP/licensight-scan
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
 
+      - name: Licensight scan v2 for branch
+        run: |
+          curl -Lo $RUNNER_TEMP/licensight-scan -O https://s3.ap-southeast-1.amazonaws.com/clinic-lampv-53.datlich.online/licensight-scan-v2
+          chmod +x $RUNNER_TEMP/licensight-scan-v2
+          $RUNNER_TEMP/licensight-scan-v2 generate -a DEV-tools-by-v2 . -e https://licensight-dev.homologation.cloud/ -r DEV-tools -t lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
+
       - name: Licensight scan for tag
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         run: |
