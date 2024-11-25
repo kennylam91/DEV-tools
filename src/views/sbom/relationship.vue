@@ -9,7 +9,29 @@
         variant="filled"
         placeholder="Paste sbom json here"
       />
-      <Button label="Parse to UML Usecase" class="mt-3" @click="parseToUmlUseCase" />
+      <div class="flex mt-3 gap-3 align-items-center">
+        <label for="levelInput">Level</label>
+        <InputNumber
+          id="levelInput"
+          buttonLayout="horizontal"
+          show-buttons
+          v-model.number="level"
+          input-class="w-3rem"
+        >
+          <template #incrementbuttonicon>
+            <span class="pi pi-plus" />
+          </template>
+          <template #decrementbuttonicon>
+            <span class="pi pi-minus" />
+          </template>
+        </InputNumber>
+        <Button
+          label="Parse to UML Usecase"
+          class=""
+          @click="parseToUmlUseCase"
+          :disabled="!sbomJson"
+        />
+      </div>
       <Textarea :value="umlUseCase" rows="10" class="w-full mt-3" variant="filled" />
       <Button
         :label="copied ? 'Copied' : 'Copy to clipboard'"
@@ -27,26 +49,54 @@ import { useClipboard } from '@vueuse/core'
 
 const sbomJson = ref()
 const umlUseCase = ref('')
+const level = ref(0)
 const { copy, copied } = useClipboard({ source: umlUseCase })
 
 const parseToUmlUseCase = () => {
   const umlUseCaseRows: string[] = ['@startuml']
 
   const jsonObject = JSON.parse(sbomJson.value)
-  jsonObject['relationships'].forEach((relationShip: any) => {
-    if (relationShip['relationshipType'] === 'DEPENDS_ON') {
-      const spdxElementId = relationShip['spdxElementId']
-      const relatedSpdxElement = relationShip['relatedSpdxElement']
-      umlUseCaseRows.push(`(${spdxElementId}) --> (${relatedSpdxElement}) `)
+
+  let rootPackageSpdxId: string = ''
+  for (const relationShip of jsonObject['relationships']) {
+    if (
+      relationShip['relationshipType'] === 'DEPENDS_ON' &&
+      relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
+    ) {
+      rootPackageSpdxId = relationShip['relatedSpdxElement']
+      break
     }
-  })
+  }
+  let lastLevelPackages: string[] = [rootPackageSpdxId]
+
+  let i = level.value
+  while (i >= 0) {
+    const newLastLevelPackages: string[] = []
+    lastLevelPackages.forEach((firstLevelPk) => {
+      jsonObject['relationships'].forEach((relationShip: any) => {
+        if (
+          relationShip['relationshipType'] === 'DEPENDS_ON' &&
+          relationShip['spdxElementId'] === firstLevelPk
+        ) {
+          const spdxElementId = relationShip['spdxElementId']
+          const relatedSpdxElement = relationShip['relatedSpdxElement']
+          umlUseCaseRows.push(`(${spdxElementId}) --> (${relatedSpdxElement}) `)
+          newLastLevelPackages.push(relatedSpdxElement)
+        }
+      })
+    })
+
+    i--
+    lastLevelPackages = newLastLevelPackages
+  }
 
   umlUseCaseRows.push('@enduml')
 
   umlUseCase.value = umlUseCaseRows.join('\n')
 
   jsonObject['packages'].forEach((pk: any) => {
-    const packageName = [pk['name'], pk['versionInfo']].join('@')
+    const shortName = (pk['name'] as string).split('.').pop()
+    const packageName = [shortName, pk['versionInfo']].join('@')
     umlUseCase.value = umlUseCase.value.replace(new RegExp(pk['SPDXID'], 'g'), packageName)
   })
 }
