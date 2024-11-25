@@ -19,6 +19,10 @@ const items = ref([
         route: '/base64/decode'
       }
     ]
+  },
+  {
+    label: 'Sbom',
+    items: [{ label: 'Relationship', route: '/sbom/relationship' }]
   }
 ])
 
