@@ -1,6 +1,11 @@
 <template>
   <div class="border-round-md p-5 bg-white">
-    <div class="page-title">Decode from Base64</div>
+    <div class="page-title">Parse the SPDX Sbom to UML UseCase</div>
+    <div class="text-sm text-500 my-2">
+      Paste the parsed result into
+      <a href="https://www.plantuml.com" target="_blank">https://www.plantuml.com/</a> to see the
+      graph.
+    </div>
     <div class="mt-3">
       <Textarea
         v-model="sbomJson"
@@ -25,12 +30,7 @@
             <span class="pi pi-minus" />
           </template>
         </InputNumber>
-        <Button
-          label="Parse to UML Usecase"
-          class=""
-          @click="parseToUmlUseCase"
-          :disabled="!sbomJson"
-        />
+        <Button label="Parse" class="" @click="parseToUmlUseCase" :disabled="!sbomJson" />
       </div>
       <Textarea :value="umlUseCase" rows="10" class="w-full mt-3" variant="filled" />
       <Button
