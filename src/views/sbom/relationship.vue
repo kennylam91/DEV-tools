@@ -70,6 +70,19 @@ const parseToUmlUseCase = () => {
   }
 }
 
+const findRootPkSpdxId = (relationships: any[]) => {
+  for (const relationShip of relationships) {
+    if (
+      relationShip['relationshipType'] === 'DEPENDS_ON' &&
+      relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
+    ) {
+      return relationShip['relatedSpdxElement']
+    }
+  }
+
+  return ''
+}
+
 const parseToHorizontalUmlUseCase = () => {
   const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
   const relationshipRows: string[] = []
@@ -77,17 +90,7 @@ const parseToHorizontalUmlUseCase = () => {
 
   const jsonObject = JSON.parse(sbomJson.value)
 
-  let rootPackageSpdxId: string = ''
-  for (const relationShip of jsonObject['relationships']) {
-    if (
-      relationShip['relationshipType'] === 'DEPENDS_ON' &&
-      relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
-    ) {
-      rootPackageSpdxId = relationShip['relatedSpdxElement']
-      break
-    }
-  }
-  let lastLevelPackages: string[] = [rootPackageSpdxId]
+  let lastLevelPackages: string[] = [findRootPkSpdxId(jsonObject['relationships'])]
 
   let i = level.value
   while (i >= 0) {
@@ -136,17 +139,7 @@ const parseToVerticalUmlUseCase = () => {
 
   const jsonObject = JSON.parse(sbomJson.value)
 
-  let rootPackageSpdxId: string = ''
-  for (const relationShip of jsonObject['relationships']) {
-    if (
-      relationShip['relationshipType'] === 'DEPENDS_ON' &&
-      relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
-    ) {
-      rootPackageSpdxId = relationShip['relatedSpdxElement']
-      break
-    }
-  }
-  let lastLevelPackages: string[] = [rootPackageSpdxId]
+  let lastLevelPackages: string[] = [findRootPkSpdxId(jsonObject['relationships'])]
 
   let i = level.value
   while (i >= 0) {
