@@ -71,16 +71,16 @@ const parseToUmlUseCase = () => {
 }
 
 const findRootPkSpdxId = (relationships: any[]) => {
-  for (const relationShip of relationships) {
-    if (
-      relationShip['relationshipType'] === 'DEPENDS_ON' &&
-      relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
-    ) {
-      return relationShip['relatedSpdxElement']
-    }
-  }
+  // for (const relationShip of relationships) {
+  //   if (
+  //     relationShip['relationshipType'] === 'DEPENDS_ON' &&
+  //     relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
+  //   ) {
+  //     return relationShip['relatedSpdxElement']
+  //   }
+  // }
 
-  return ''
+  return 'SPDXRef-RootPackage'
 }
 
 const parseToHorizontalUmlUseCase = () => {
