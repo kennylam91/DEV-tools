@@ -20,6 +20,26 @@ export class RelationshipGraph {
     return this.internalTraverse(0, maxLevel, func, this.root)
   }
 
+  findPaths(target: string) {
+    const paths: string[][] = []
+    this._findPaths(paths, this.root, [this.root], target)
+
+    return paths
+  }
+
+  private _findPaths(paths: string[][], node: string, _path: string[], target: string) {
+    this.graph.get(node)?.forEach((child) => {
+      const path = [..._path]
+      path.push(child)
+      if (child.includes(target)) {
+        paths.push(path)
+        return
+      }
+
+      this._findPaths(paths, child, path, target)
+    })
+  }
+
   private internalTraverse(
     level: number,
     maxLevel: number,
