@@ -1,10 +1,11 @@
 <template>
   <div class="border-round-md p-5 bg-white">
     <div class="page-title">Parse the SPDX Sbom to UML UseCase</div>
-    <div class="text-sm text-500 my-2">
+    <div class="text-sm text-500 my-2 line-height-2">
       Paste the parsed result into
       <a href="https://www.plantuml.com" target="_blank">https://www.plantuml.com/</a> to see the
-      graph.
+      graph.<br />
+      You can either search for paths to a specific package or get all packages to a specific level.
     </div>
     <div class="mt-3">
       <Textarea
@@ -20,6 +21,7 @@
           id="levelInput"
           buttonLayout="horizontal"
           show-buttons
+          :disabled="!!isSearching"
           v-model.number="level"
           input-class="w-3rem"
         >
@@ -30,14 +32,7 @@
             <span class="pi pi-minus" />
           </template>
         </InputNumber>
-        <div class="flex align-items-center gap-2">
-          <RadioButton v-model="type" input-id="verticalType" name="type" value="vertical" />
-          <label for="verticalType">Vertical</label>
-        </div>
-        <div class="flex align-items-center gap-2">
-          <RadioButton v-model="type" input-id="horizontalType" name="type" value="horizontal" />
-          <label for="horizontalType">Horizontal</label>
-        </div>
+        <InputText v-model="search" placeholder="Search for package" />
         <Button label="Parse" class="" @click="parseToUmlUseCase" :disabled="!sbomJson" />
       </div>
       <Textarea :value="umlUseCase" rows="10" class="w-full mt-3" variant="filled" />
@@ -53,124 +48,73 @@
 </template>
 
 <script setup lang="ts">
+import { RelationshipGraph } from '@/models/relationship-graph'
 import { useClipboard } from '@vueuse/core'
-import RadioButton from 'primevue/radiobutton'
 
-const sbomJson = ref()
+const sbomJson = ref('')
 const umlUseCase = ref('')
-const level = ref(0)
-const type = ref('vertical')
+const level = ref(1)
 const { copy, copied } = useClipboard({ source: umlUseCase })
+const search = ref()
+
+const isSearching = computed(() => search.value)
+
+const parseToGraph = (jsonObject: any) => {
+  let packageNameMap = new Map<string, string>()
+  let spdxRootId = 'SPDXRef-RootPackage'
+
+  jsonObject['packages'].forEach((pk: any) => {
+    const shortName = (pk['name'] as string).split('.').pop()
+    const packageName = [shortName, pk['versionInfo']].join('@')
+    packageNameMap.set(pk['SPDXID'], packageName)
+  })
+
+  const graph = new RelationshipGraph(packageNameMap.get(spdxRootId)!)
+
+  jsonObject['relationships'].forEach((relationShip: any) => {
+    if (relationShip['relationshipType'] === 'DEPENDS_ON') {
+      const spdxElementId = relationShip['spdxElementId']
+      const relatedSpdxElementId = relationShip['relatedSpdxElement']
+
+      if (!packageNameMap.has(spdxElementId)) {
+        console.error('spdxElementId not found', spdxElementId)
+      }
+      if (!packageNameMap.has(relatedSpdxElementId)) {
+        console.error('relatedSpdxElementId not found', relatedSpdxElementId)
+      }
+      graph.addRelationship(
+        packageNameMap.get(spdxElementId)!,
+        packageNameMap.get(relatedSpdxElementId)!
+      )
+    }
+  })
+
+  return graph
+}
 
 const parseToUmlUseCase = () => {
-  if (type.value === 'vertical') {
-    parseToVerticalUmlUseCase()
-  } else {
-    parseToHorizontalUmlUseCase()
-  }
-}
+  const jsonObject = JSON.parse(sbomJson.value)
+  const graph = parseToGraph(jsonObject)
 
-const findRootPkSpdxId = (relationships: any[]) => {
-  // for (const relationShip of relationships) {
-  //   if (
-  //     relationShip['relationshipType'] === 'DEPENDS_ON' &&
-  //     relationShip['spdxElementId'] === 'SPDXRef-RootPackage'
-  //   ) {
-  //     return relationShip['relatedSpdxElement']
-  //   }
-  // }
-
-  return 'SPDXRef-RootPackage'
-}
-
-const parseToHorizontalUmlUseCase = () => {
   const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
-  const relationshipRows: string[] = []
-  const levels = []
 
-  const jsonObject = JSON.parse(sbomJson.value)
-
-  let lastLevelPackages: string[] = [findRootPkSpdxId(jsonObject['relationships'])]
-
-  let i = level.value
-  while (i >= 0) {
-    const newLastLevelPackages: string[] = []
-    lastLevelPackages.forEach((lastLevelPk) => {
-      jsonObject['relationships'].forEach((relationShip: any) => {
-        if (
-          relationShip['relationshipType'] === 'DEPENDS_ON' &&
-          relationShip['spdxElementId'] === lastLevelPk
-        ) {
-          const spdxElementId = relationShip['spdxElementId']
-          const relatedSpdxElement = relationShip['relatedSpdxElement']
-          relationshipRows.push(`(${spdxElementId}) --> (${relatedSpdxElement}) `)
-          newLastLevelPackages.push(relatedSpdxElement)
-        }
-      })
+  if (search.value) {
+    graph.findPaths(search.value).forEach((path) => {
+      for (let i = 0; i < path.length - 1; i++) {
+        umlUseCaseRows.push(`(${path[i]}) --> (${path[i + 1]}) `)
+      }
     })
-
-    i--
-    lastLevelPackages = newLastLevelPackages
-    levels.push(newLastLevelPackages)
-  }
-
-  const rectangleRows = levels.map((level, i) => {
-    const result = [`package "level_${i}" {`]
-    level.forEach((pk) => result.push(`usecase "${pk}"`))
-    result.push(`}`)
-    return result.join('\n')
-  })
-
-  umlUseCaseRows.push(...rectangleRows)
-  umlUseCaseRows.push(...relationshipRows)
-  umlUseCaseRows.push('@enduml')
-
-  umlUseCase.value = umlUseCaseRows.join('\n')
-
-  jsonObject['packages'].forEach((pk: any) => {
-    const shortName = (pk['name'] as string).split('.').pop()
-    const packageName = [shortName, pk['versionInfo']].join('@')
-    umlUseCase.value = umlUseCase.value.replace(new RegExp(pk['SPDXID'], 'g'), packageName)
-  })
-}
-
-const parseToVerticalUmlUseCase = () => {
-  const umlUseCaseRows: string[] = ['@startuml']
-
-  const jsonObject = JSON.parse(sbomJson.value)
-
-  let lastLevelPackages: string[] = [findRootPkSpdxId(jsonObject['relationships'])]
-
-  let i = level.value
-  while (i >= 0) {
-    const newLastLevelPackages: string[] = []
-    lastLevelPackages.forEach((firstLevelPk) => {
-      jsonObject['relationships'].forEach((relationShip: any) => {
-        if (
-          relationShip['relationshipType'] === 'DEPENDS_ON' &&
-          relationShip['spdxElementId'] === firstLevelPk
-        ) {
-          const spdxElementId = relationShip['spdxElementId']
-          const relatedSpdxElement = relationShip['relatedSpdxElement']
-          umlUseCaseRows.push(`(${spdxElementId}) --> (${relatedSpdxElement}) `)
-          newLastLevelPackages.push(relatedSpdxElement)
-        }
-      })
-    })
-
-    i--
-    lastLevelPackages = newLastLevelPackages
+  } else {
+    graph.traverse(
+      level.value,
+      (child: string, parent?: string) =>
+        parent && child && umlUseCaseRows.push(`(${parent}) --> (${child}) `)
+    )
   }
 
   umlUseCaseRows.push('@enduml')
 
   umlUseCase.value = umlUseCaseRows.join('\n')
-
-  jsonObject['packages'].forEach((pk: any) => {
-    const shortName = (pk['name'] as string).split('.').pop()
-    const packageName = [shortName, pk['versionInfo']].join('@')
-    umlUseCase.value = umlUseCase.value.replace(new RegExp(pk['SPDXID'], 'g'), packageName)
-  })
 }
 </script>
 
