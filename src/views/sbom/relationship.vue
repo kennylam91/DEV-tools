@@ -53,21 +53,23 @@
 </template>
 
 <script setup lang="ts">
+import { RelationshipGraph } from '@/models/relationship-graph'
 import { useClipboard } from '@vueuse/core'
 import RadioButton from 'primevue/radiobutton'
 
-const sbomJson = ref()
+const sbomJson = ref('')
 const umlUseCase = ref('')
-const level = ref(0)
+const level = ref(1)
 const type = ref('vertical')
 const { copy, copied } = useClipboard({ source: umlUseCase })
 
 const parseToUmlUseCase = () => {
-  if (type.value === 'vertical') {
-    parseToVerticalUmlUseCase()
-  } else {
-    parseToHorizontalUmlUseCase()
-  }
+  parseToHorizontalUmlUseCaseByGraph()
+  // if (type.value === 'vertical') {
+  //   parseToVerticalUmlUseCase()
+  // } else {
+  //   parseToHorizontalUmlUseCase()
+  // }
 }
 
 const findRootPkSpdxId = (relationships: any[]) => {
@@ -83,11 +85,47 @@ const findRootPkSpdxId = (relationships: any[]) => {
   return 'SPDXRef-RootPackage'
 }
 
+const parseToGraph = (relationships: any[]) => {
+  const graph = new RelationshipGraph('SPDXRef-RootPackage')
+
+  relationships.forEach((relationShip: any) => {
+    const spdxElementId = relationShip['spdxElementId']
+    const relatedSpdxElementId = relationShip['relatedSpdxElement']
+    graph.addRelationship(spdxElementId, relatedSpdxElementId)
+  })
+
+  return graph
+}
+
+const parseToHorizontalUmlUseCaseByGraph = () => {
+  const jsonObject = JSON.parse(sbomJson.value)
+  const graph = parseToGraph(jsonObject['relationships'])
+
+  const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
+
+  graph.traverse(
+    0,
+    level.value,
+    (child: string, parent?: string) =>
+      parent && child && umlUseCaseRows.push(`(${parent}) --> (${child}) `),
+    'SPDXRef-RootPackage'
+  )
+
+  umlUseCaseRows.push('@enduml')
+
+  umlUseCase.value = umlUseCaseRows.join('\n')
+
+  jsonObject['packages'].forEach((pk: any) => {
+    const shortName = (pk['name'] as string).split('.').pop()
+    const packageName = [shortName, pk['versionInfo']].join('@')
+    umlUseCase.value = umlUseCase.value.replace(new RegExp(pk['SPDXID'], 'g'), packageName)
+  })
+}
+
 const parseToHorizontalUmlUseCase = () => {
   const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
   const relationshipRows: string[] = []
   const levels = []
-
   const jsonObject = JSON.parse(sbomJson.value)
 
   let lastLevelPackages: string[] = [findRootPkSpdxId(jsonObject['relationships'])]
