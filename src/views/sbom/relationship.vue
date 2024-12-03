@@ -104,11 +104,9 @@ const parseToHorizontalUmlUseCaseByGraph = () => {
   const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
 
   graph.traverse(
-    0,
     level.value,
     (child: string, parent?: string) =>
-      parent && child && umlUseCaseRows.push(`(${parent}) --> (${child}) `),
-    'SPDXRef-RootPackage'
+      parent && child && umlUseCaseRows.push(`(${parent}) --> (${child}) `)
   )
 
   umlUseCaseRows.push('@enduml')
