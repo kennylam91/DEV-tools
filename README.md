@@ -1,5 +1,7 @@
 # dev-tools
 
+The app is deployed here: http://dev-tools-app.s3-website-ap-southeast-1.amazonaws.com/
+
 This template should help get you started developing with Vue 3 in Vite.
 
 ## Recommended IDE Setup
