@@ -15,12 +15,16 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.11.0",
+    "axios": "^1.7.9",
     "date-fns": "^3.6.0",
+    "json-string-formatter": "^1.0.1",
+    "packageurl-js": "^2.0.1",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
     "primevue": "3.52.0",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "vue3-json-viewer": "^2.2.2"
   },
   "devDependencies": {
     "@primevue/auto-import-resolver": "4.0.0-beta.5",
