@@ -23,6 +23,10 @@ const items = ref([
   {
     label: 'Sbom',
     items: [{ label: 'Relationship', route: '/sbom/relationship' }]
+  },
+  {
+    label: 'External request',
+    items: [{ label: 'Deps.dev', route: '/external-request/deps-dev' }]
   }
 ])
 

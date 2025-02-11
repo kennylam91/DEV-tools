@@ -22,6 +22,7 @@ declare module 'vue-router/auto-routes' {
     '/about': RouteRecordInfo<'/about', '/about', Record<never, never>, Record<never, never>>,
     '/base64/decode': RouteRecordInfo<'/base64/decode', '/base64/decode', Record<never, never>, Record<never, never>>,
     '/base64/encode': RouteRecordInfo<'/base64/encode', '/base64/encode', Record<never, never>, Record<never, never>>,
+    '/external-request/deps-dev': RouteRecordInfo<'/external-request/deps-dev', '/external-request/deps-dev', Record<never, never>, Record<never, never>>,
     '/sbom/relationship': RouteRecordInfo<'/sbom/relationship', '/sbom/relationship', Record<never, never>, Record<never, never>>,
     '/work-logs': RouteRecordInfo<'/work-logs', '/work-logs', Record<never, never>, Record<never, never>>,
   }
