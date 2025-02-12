@@ -11,7 +11,7 @@
       <Textarea
         v-model="sbomJson"
         rows="8"
-        class="w-full"
+        class="w-full text-sm"
         variant="filled"
         placeholder="Paste sbom json here"
       />
@@ -34,8 +34,9 @@
         </InputNumber>
         <InputText v-model="search" placeholder="Search for package" />
         <Button label="Parse" class="" @click="parseToUmlUseCase" :disabled="!sbomJson" />
+        <Button label="Simple Parse" class="" @click="simpleParse" :disabled="!sbomJson" />
       </div>
-      <Textarea :value="umlUseCase" rows="10" class="w-full mt-3" variant="filled" />
+      <Textarea :value="umlUseCase" rows="10" class="w-full mt-3 text-sm" variant="filled" />
       <Button
         :label="copied ? 'Copied' : 'Copy to clipboard'"
         class="mt-3"
@@ -111,6 +112,30 @@ const parseToUmlUseCase = () => {
         parent && child && umlUseCaseRows.push(`(${parent}) --> (${child}) `)
     )
   }
+
+  umlUseCaseRows.push('@enduml')
+
+  umlUseCase.value = umlUseCaseRows.join('\n')
+}
+
+const simpleParse = () => {
+  const jsonObject = JSON.parse(sbomJson.value)
+
+  const umlUseCaseRows: string[] = ['@startuml', 'left to right direction']
+  jsonObject['packages'].forEach((pk: any) => {
+    const shortName = (pk['name'] as string).split('.').pop()
+    const packageName = [shortName, pk['versionInfo']].join('@')
+    umlUseCaseRows.push(`usecase (${pk['SPDXID']}) as "${packageName}"`)
+  })
+
+  jsonObject['relationships'].forEach((relationShip: any) => {
+    if (relationShip['relationshipType'] === 'DEPENDS_ON') {
+      const spdxElementId = relationShip['spdxElementId']
+      const relatedSpdxElementId = relationShip['relatedSpdxElement']
+
+      umlUseCaseRows.push(`(${spdxElementId}) --> (${relatedSpdxElementId})`)
+    }
+  })
 
   umlUseCaseRows.push('@enduml')
 
