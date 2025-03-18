@@ -57,10 +57,6 @@ jobs:
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e qa -at WP6oO8gRYG63eXHFUmP0sXxjXzH/WDBm -b ${{ steps.extract_branch.outputs.branch }}
-          echo "check maven version:"
-          mvn --version
-          echo "check python version:"
-          python --version
 
       - name: Run licensight-file for branch
         run: |
