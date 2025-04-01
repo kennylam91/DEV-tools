@@ -11,7 +11,7 @@ export const chatWithGenAI = (userInput: string) => {
   return axios.post(
     'https://openrouter.ai/api/v1/chat/completions',
     {
-      model: 'mistral/ministral-8b',
+      model: 'deepseek/deepseek-r1-distill-llama-70b:free',
       messages: [
         {
           role: 'user',
