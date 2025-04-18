@@ -56,7 +56,7 @@ jobs:
         run: |
           curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/latest/linux/licensight-scan
           chmod +x $RUNNER_TEMP/licensight-scan
-          $RUNNER_TEMP/licensight-scan version
+          echo "Licensight-scan version: ${$RUNNER_TEMP/licensight-scan version}"
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
 
       - name: Run licensight-file for branch
@@ -70,5 +70,5 @@ jobs:
         run: |
           curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/latest/linux/licensight-scan
           chmod +x $RUNNER_TEMP/licensight-scan
-          $RUNNER_TEMP/licensight-scan version
+          echo "Licensight-scan version: ${$RUNNER_TEMP/licensight-scan version}"
           $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -t ${{ github.ref_name }}
