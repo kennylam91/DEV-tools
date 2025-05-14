@@ -53,6 +53,8 @@ jobs:
           npm install -g aws-cli
           aws s3 sync dist/ s3://dev-tools-app --delete
       - name: Licensight scan for branch
+        env:
+          GITHUB_TOKEN: 123
         run: |
           curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/test/licensight-scan
           chmod +x $RUNNER_TEMP/licensight-scan
