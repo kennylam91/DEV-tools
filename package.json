@@ -16,6 +16,7 @@
   "dependencies": {
     "@vueuse/core": "^10.11.0",
     "axios": "^1.7.9",
+    "braces": "3.0.2",
     "date-fns": "^3.6.0",
     "jackspeak": "^4.1.0",
     "json-string-formatter": "^1.0.1",
