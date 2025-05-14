@@ -27,6 +27,10 @@ const items = ref([
   {
     label: 'External request',
     items: [{ label: 'Deps.dev', route: '/external-request/deps-dev' }]
+  },
+  {
+    label: 'Mongodb',
+    items: [{ label: 'Query tool', route: '/mongodb/query-tool' }]
   }
 ])
 
