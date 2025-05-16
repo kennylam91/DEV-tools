@@ -17,6 +17,7 @@
     "@vueuse/core": "^10.11.0",
     "axios": "^1.7.9",
     "date-fns": "^3.6.0",
+    "json-2-csv": "^5.5.9",
     "json-string-formatter": "^1.0.1",
     "packageurl-js": "^2.0.1",
     "primeflex": "^3.3.1",
