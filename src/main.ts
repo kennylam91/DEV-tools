@@ -8,10 +8,10 @@ import router from './router'
 import PrimeVue from 'primevue/config'
 import JsonViewer from 'vue3-json-viewer'
 import Markdown from 'vue3-markdown-it'
-
 import 'primevue/resources/themes/aura-light-indigo/theme.css'
-
 import 'primeicons/primeicons.css'
+import VueDiff from 'vue-diff'
+import 'vue-diff/dist/index.css'
 
 const app = createApp(App)
 
@@ -19,5 +19,6 @@ app.use(router)
 app.use(PrimeVue)
 app.use(JsonViewer)
 app.use(Markdown)
+app.use(VueDiff)
 
 app.mount('#app')
