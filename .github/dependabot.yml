@@ -1,7 +1,7 @@
 version: 2
 updates:
   # For npm (JavaScript/TypeScript)
-  - package-ecosystem: "pnpm"
+  - package-ecosystem: "npm"
     directory: "/" # Location of package.json
     schedule:
       interval: "weekly"
