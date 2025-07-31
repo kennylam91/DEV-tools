@@ -50,8 +50,8 @@ dependencies:
 
 devDependencies:
   '@primevue/auto-import-resolver':
-    specifier: 4.0.0-beta.5
-    version: 4.0.0-beta.5
+    specifier: 4.3.7
+    version: 4.3.7
   '@rushstack/eslint-patch':
     specifier: ^1.8.0
     version: 1.8.0
@@ -447,15 +447,15 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: true
 
-  /@primevue/auto-import-resolver@4.0.0-beta.5:
-    resolution: {integrity: sha512-HHcnIsy46LgVMYDCb3PkrjSKCqxW/y4QrrIIvzgX76JSThwjlA4nFZ7WCakaRjwmckToZL1LPHSdqQtToEoA4w==}
+  /@primevue/auto-import-resolver@4.3.7:
+    resolution: {integrity: sha512-U/gJ2q1XckszMcgViYsjz6+hCdhoCi+6l9JS6E93MFfsGji1NnlwM/+7ZDElGQ0CT8YuLXEOhg+HgR1Fiznljg==}
     engines: {node: '>=12.11.0'}
     dependencies:
-      '@primevue/metadata': 4.0.0-beta.5
+      '@primevue/metadata': 4.3.7
     dev: true
 
-  /@primevue/metadata@4.0.0-beta.5:
-    resolution: {integrity: sha512-gcC4Pbal+q+HDQl7/hlrrvjFnGRXSjQDgnaJZCgPTXE8XISTYP/lXHZ1Sir+9n/u5WBZbLzdwjsSY9ipjsn4fA==}
+  /@primevue/metadata@4.3.7:
+    resolution: {integrity: sha512-nTyedHcAuqDqO79+iiyCpFe/phJH5DZEwsx+M6jXSWohHhU8pRjiRCK1rU0exyHkUbaA/QkyUUJOVb/Gkwmh5A==}
     engines: {node: '>=12.11.0'}
     dev: true
 
