@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # For npm (JavaScript/TypeScript)
+  - package-ecosystem: "pnpm"
+    directory: "/" # Location of package.json
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
