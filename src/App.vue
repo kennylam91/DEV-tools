@@ -22,7 +22,10 @@ const items = ref([
   },
   {
     label: 'Sbom',
-    items: [{ label: 'Relationship', route: '/sbom/relationship' }]
+    items: [
+      { label: 'Relationship', route: '/sbom/relationship' },
+      { label: 'Compare', route: '/sbom/compare' }
+    ]
   },
   {
     label: 'External request',

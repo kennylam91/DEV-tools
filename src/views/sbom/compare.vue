@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { SpdxJson } from '@/models/spdx-json'
 import { Diff } from 'vue-diff'
 
 const firstSbom = ref()
@@ -7,11 +8,15 @@ const firstPackagesStr = ref()
 const secondPackagesStr = ref()
 
 const getPackages = (sbomJson: string): string[] => {
-  const jsonObject = JSON.parse(sbomJson)
+  const jsonObject: SpdxJson = JSON.parse(sbomJson)
 
-  return jsonObject['packages'].map((pk: any) => {
-    return pk.name + '@' + pk.versionInfo
-  })
+  return jsonObject['packages']
+    .map((pk) => {
+      return (
+        pk.externalRefs?.find((ref: any) => ref?.referenceType === 'purl')?.referenceLocator || ''
+      )
+    })
+    .filter((item: any) => !!item)
 }
 
 watchEffect(() => {
@@ -47,7 +52,13 @@ watchEffect(() => {
       </div>
     </div>
     <div class="mt-4">
-      <Diff :prev="firstPackagesStr" :current="secondPackagesStr" virtual-scroll folding />
+      <Diff
+        v-show="firstPackagesStr && secondPackagesStr"
+        :prev="firstPackagesStr"
+        :current="secondPackagesStr"
+        virtual-scroll
+        folding
+      />
     </div>
   </div>
 </template>
