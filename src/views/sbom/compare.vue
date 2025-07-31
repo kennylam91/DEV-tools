@@ -52,7 +52,13 @@ watchEffect(() => {
       </div>
     </div>
     <div class="mt-4">
-      <Diff :prev="firstPackagesStr" :current="secondPackagesStr" virtual-scroll folding />
+      <Diff
+        v-show="firstPackagesStr && secondPackagesStr"
+        :prev="firstPackagesStr"
+        :current="secondPackagesStr"
+        virtual-scroll
+        folding
+      />
     </div>
   </div>
 </template>
