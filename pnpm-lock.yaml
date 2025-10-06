@@ -53,8 +53,8 @@ devDependencies:
     specifier: 4.0.0-beta.5
     version: 4.0.0-beta.5
   '@rushstack/eslint-patch':
-    specifier: ^1.8.0
-    version: 1.8.0
+    specifier: ^1.13.0
+    version: 1.13.0
   '@tsconfig/node20':
     specifier: ^20.1.4
     version: 20.1.4
@@ -601,8 +601,8 @@ packages:
     dev: true
     optional: true
 
-  /@rushstack/eslint-patch@1.8.0:
-    resolution: {integrity: sha512-0HejFckBN2W+ucM6cUOlwsByTKt9/+0tWhqUffNIcHqCXkthY/mZ7AuYPK/2IIaGWhdl0h+tICDO0ssLMd6XMQ==}
+  /@rushstack/eslint-patch@1.13.0:
+    resolution: {integrity: sha512-2ih5qGw5SZJ+2fLZxP6Lr6Na2NTIgPRL/7Kmyuw0uIyBQnuhQ8fi8fzUTd38eIQmqp+GYLC00cI6WgtqHxBwmw==}
     dev: true
 
   /@tsconfig/node20@20.1.4:
