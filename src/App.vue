@@ -34,6 +34,10 @@ const items = ref([
   {
     label: 'Mongodb',
     items: [{ label: 'Query tool', route: '/mongodb/query-tool' }]
+  },
+  {
+    label: 'Vcpkg',
+    items: [{ label: 'Package Retrieval', route: '/vcpkg/package-retrieval' }]
   }
 ])
 
