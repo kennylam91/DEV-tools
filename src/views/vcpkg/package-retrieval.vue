@@ -117,9 +117,9 @@ function goToStep(step: number) {
 </script>
 
 <template>
-  <div class="vcpkg-retrieval-container">
+  <div class="border-round-md p-5 bg-white">
     <div class="card">
-      <h1 class="text-3xl font-bold mb-4">Vcpkg Package Retrieval</h1>
+      <h1 class="page-title">Vcpkg Package Retrieval</h1>
       <p class="text-gray-600 mb-4">
         Retrieve vcpkg package metadata by package URL (purl). Example: pkg:vcpkg/asmjit@2025-01-22
       </p>
@@ -302,7 +302,7 @@ function goToStep(step: number) {
 
           <TabView>
             <TabPanel header="Parsed Metadata">
-              <json-viewer :value="step3Result.metadata" :expand-depth="5" copyable boxed sort />
+              <json-viewer :value="step3Result.metadata" :expand-depth="2" copyable boxed />
             </TabPanel>
             <TabPanel header="Raw Content">
               <pre class="raw-content">{{ step3Result.rawContent }}</pre>

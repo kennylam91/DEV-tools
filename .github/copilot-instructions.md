@@ -62,9 +62,6 @@ pnpm dev                          # Start hot-reload dev server (default: localh
 pnpm type-check             # Type validation (via vue-tsc)
 pnpm lint                   # ESLint + fix violations
 pnpm format                 # Prettier formatting
-pnpm build                  # Type-check + minified production build
-pnpm build-only             # Minified build only (skips type-check)
-pnpm preview                # Preview production build locally
 ```
 
 ### Key Commands
