@@ -6,6 +6,8 @@
 
 **Tech Stack**: Vue 3 (composition API), TypeScript, Vite, PrimeVue, Vue Router (file-based via unplugin-vue-router)
 
+**Node.js Requirement**: This project requires **Node.js version 16** to run properly. Use `nvm use 16` or ensure Node.js 16 is installed before setup.
+
 ---
 
 ## Architecture & Key Patterns

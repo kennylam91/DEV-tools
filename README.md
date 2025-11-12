@@ -4,6 +4,18 @@ The app is deployed here: http://dev-tools-app.s3-website-ap-southeast-1.amazona
 
 This template should help get you started developing with Vue 3 in Vite.
 
+## Prerequisites
+
+This project requires **Node.js version 16** to run properly.
+
+You can manage Node.js versions using [nvm](https://github.com/nvm-sh/nvm):
+
+```sh
+nvm use 16
+```
+
+Or install Node.js 16 directly from [nodejs.org](https://nodejs.org/).
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
