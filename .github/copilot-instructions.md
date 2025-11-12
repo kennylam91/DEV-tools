@@ -49,6 +49,17 @@
 
 ## Developer Workflows
 
+### Prerequisites
+
+This project requires:
+- **Node.js**: Version 16
+- **pnpm**: Version 8
+
+Install pnpm globally if needed:
+```sh
+npm install -g pnpm@8
+```
+
 ### Setup & Development
 
 ```sh

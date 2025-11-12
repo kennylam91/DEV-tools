@@ -16,6 +16,17 @@ TypeScript cannot handle type information for `.vue` imports by default, so we r
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
+## Prerequisites
+
+This project requires:
+- **Node.js**: Version 16
+- **pnpm**: Version 8
+
+You can install pnpm globally with:
+```sh
+npm install -g pnpm@8
+```
+
 ## Project Setup
 
 ```sh
