@@ -185,7 +185,17 @@ function goToStep(step: number) {
                 :paginator="true"
                 class="text-sm"
               >
-                <Column field="version" header="Version" sortable />
+                <Column header="Version" sortable>
+                  <template #body="slotProps">
+                    <span v-if="slotProps.data['version-date']">
+                      <strong>Date:</strong> {{ slotProps.data['version-date'] }}
+                    </span>
+                    <span v-else-if="slotProps.data['version-semver']">
+                      <strong>Semver:</strong> {{ slotProps.data['version-semver'] }}
+                    </span>
+                    <span v-else> <strong>Version:</strong> {{ slotProps.data.version }} </span>
+                  </template>
+                </Column>
                 <Column field="port-version" header="Port Version" sortable />
                 <Column field="git-tree" header="Git Tree SHA">
                   <template #body="slotProps">

@@ -9,6 +9,7 @@ import type {
   Step2Result,
   Step3Result
 } from '@/models/vcpkg-package'
+import { PackageURL } from 'packageurl-js'
 
 const GITHUB_API_BASE = 'https://api.github.com'
 const VCPKG_REPO = 'microsoft/vcpkg'
@@ -31,27 +32,26 @@ class VcpkgServiceImpl implements VcpkgService {
    * Parse a package URL (purl) in the format: pkg:vcpkg/portname@version
    */
   parsePackageUrl(purl: string): ParsedPurl {
-    // Remove pkg: prefix if present
-    const cleaned = purl.replace(/^pkg:/, '')
-
-    // Split into type and rest
-    const [type, rest] = cleaned.split('/', 2)
-
-    if (type !== 'vcpkg') {
-      throw new Error(`Invalid purl type: ${type}. Expected 'vcpkg'`)
+    // Use packageurl-js to parse the purl
+    let pkg: any
+    try {
+      pkg = PackageURL.fromString(purl)
+    } catch (e) {
+      throw new Error(`Invalid purl: ${purl}`)
     }
-
-    if (!rest) {
-      throw new Error('Invalid purl format. Expected pkg:vcpkg/portname@version')
+    if (pkg.type !== 'vcpkg') {
+      throw new Error(`Invalid purl type: ${pkg.type}. Expected 'vcpkg'`)
     }
-
-    // Split name and version
-    const [name, version] = rest.split('@', 2)
-
+    // Always use only the port name (ignore namespace)
+    let portName = pkg.name
+    if (portName.includes('/')) {
+      // Strip namespace if present
+      portName = portName.split('/').pop() || portName
+    }
     return {
-      type,
-      name,
-      version
+      type: pkg.type,
+      name: portName,
+      version: pkg.version
     }
   }
 
@@ -82,16 +82,49 @@ class VcpkgServiceImpl implements VcpkgService {
    * Find a specific version entry in the versions array
    */
   findVersionEntry(versions: VcpkgVersionEntry[], targetVersion: string): VcpkgVersionEntry | null {
+    // Normalize targetVersion (strip leading 'v' and '{portName}-' if present)
+    let normalizedVersion = targetVersion
+    if (normalizedVersion.startsWith('v')) {
+      normalizedVersion = normalizedVersion.slice(1)
+    }
+    // Try to strip '{portName}-' prefix
+    if (versions.length > 0) {
+      // Try to infer portName from context (not always possible, so fallback to regex)
+      const regex = /^([a-zA-Z0-9_-]+)-(.+)$/
+      const match = normalizedVersion.match(regex)
+      if (match && match[2]) {
+        // If the suffix matches a version in the list, use it
+        if (
+          versions.some(
+            (v) =>
+              v.version === match[2] ||
+              v['version-string'] === match[2] ||
+              v['version-semver'] === match[2]
+          )
+        ) {
+          normalizedVersion = match[2]
+        }
+      }
+    }
+
     // Match by version-date
-    let entry = versions.find((v) => v['version-date'] === targetVersion)
+    let entry = versions.find((v) => v['version-date'] === normalizedVersion)
     if (entry) return entry
 
     // Match by port-version (as string)
-    entry = versions.find((v) => String(v['port-version']) === targetVersion)
+    entry = versions.find((v) => String(v['port-version']) === normalizedVersion)
+    if (entry) return entry
+
+    // Match by version-semver (as string)
+    entry = versions.find((v) => String(v['version-semver']) === normalizedVersion)
+    if (entry) return entry
+
+    // Match by version-string (as string)
+    entry = versions.find((v) => String(v['version-string']) === normalizedVersion)
     if (entry) return entry
 
     // Fallback: match by version
-    entry = versions.find((v) => v.version === targetVersion)
+    entry = versions.find((v) => v.version === normalizedVersion)
     if (entry) return entry
 
     return null

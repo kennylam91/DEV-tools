@@ -4,7 +4,9 @@
 export interface VcpkgVersionEntry {
   version: string
   'version-date'?: string
-  'port-version'?: number
+  'port-version'?: string
+  'version-semver'?: string
+  'version-string'?: string
   'git-tree': string
 }
 
