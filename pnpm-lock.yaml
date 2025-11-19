@@ -69,7 +69,7 @@ devDependencies:
     version: 9.0.0(eslint@8.57.1)(prettier@3.2.5)
   '@vue/eslint-config-typescript':
     specifier: ^13.0.0
-    version: 13.0.0(eslint-plugin-vue@9.23.0)(eslint@8.57.1)(typescript@5.4.2)
+    version: 13.0.0(eslint-plugin-vue@9.33.0)(eslint@8.57.1)(typescript@5.4.2)
   '@vue/tsconfig':
     specifier: ^0.5.1
     version: 0.5.1
@@ -78,7 +78,7 @@ devDependencies:
     version: 8.57.1
   eslint-plugin-vue:
     specifier: ^9.23.0
-    version: 9.23.0(eslint@8.57.1)
+    version: 9.33.0(eslint@8.57.1)
   npm-run-all2:
     specifier: ^6.1.2
     version: 6.1.2
@@ -356,6 +356,16 @@ packages:
 
   /@eslint-community/eslint-utils@4.7.0(eslint@8.57.1):
     resolution: {integrity: sha512-dyybb3AcajC7uha6CvhdVRJqaKyn7w2YKqKyAN37NKYgZT36w+iRb0Dymmc5qEJ549c/S31cMMSFd75bteCpCw==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
+    dependencies:
+      eslint: 8.57.1
+      eslint-visitor-keys: 3.4.3
+    dev: true
+
+  /@eslint-community/eslint-utils@4.9.0(eslint@8.57.1):
+    resolution: {integrity: sha512-ayVFHdtZ+hsq1t2Dy24wCmGXGe4q9Gu3smhLYALJrr473ZH27MsnSL+LKUlimp4BWJqMDMLmPpx/Q9R3OAlL4g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
@@ -911,7 +921,7 @@ packages:
       - '@types/eslint'
     dev: true
 
-  /@vue/eslint-config-typescript@13.0.0(eslint-plugin-vue@9.23.0)(eslint@8.57.1)(typescript@5.4.2):
+  /@vue/eslint-config-typescript@13.0.0(eslint-plugin-vue@9.33.0)(eslint@8.57.1)(typescript@5.4.2):
     resolution: {integrity: sha512-MHh9SncG/sfqjVqjcuFLOLD6Ed4dRAis4HNt0dXASeAuLqIAx4YMB1/m2o4pUKK1vCt8fUvYG8KKX2Ot3BVZTg==}
     engines: {node: ^18.18.0 || >=20.0.0}
     peerDependencies:
@@ -925,7 +935,7 @@ packages:
       '@typescript-eslint/eslint-plugin': 7.12.0(@typescript-eslint/parser@7.12.0)(eslint@8.57.1)(typescript@5.4.2)
       '@typescript-eslint/parser': 7.12.0(eslint@8.57.1)(typescript@5.4.2)
       eslint: 8.57.1
-      eslint-plugin-vue: 9.23.0(eslint@8.57.1)
+      eslint-plugin-vue: 9.33.0(eslint@8.57.1)
       typescript: 5.4.2
       vue-eslint-parser: 9.4.3(eslint@8.57.1)
     transitivePeerDependencies:
@@ -1417,18 +1427,19 @@ packages:
       synckit: 0.8.8
     dev: true
 
-  /eslint-plugin-vue@9.23.0(eslint@8.57.1):
-    resolution: {integrity: sha512-Bqd/b7hGYGrlV+wP/g77tjyFmp81lh5TMw0be9093X02SyelxRRfCI6/IsGq/J7Um0YwB9s0Ry0wlFyjPdmtUw==}
+  /eslint-plugin-vue@9.33.0(eslint@8.57.1):
+    resolution: {integrity: sha512-174lJKuNsuDIlLpjeXc5E2Tss8P44uIimAfGD0b90k0NoirJqpG7stLuU9Vp/9ioTOrQdWVREc4mRd1BD+CvGw==}
     engines: {node: ^14.17.0 || >=16.0.0}
     peerDependencies:
-      eslint: ^6.2.0 || ^7.0.0 || ^8.0.0
+      eslint: ^6.2.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@8.57.1)
+      '@eslint-community/eslint-utils': 4.9.0(eslint@8.57.1)
       eslint: 8.57.1
+      globals: 13.24.0
       natural-compare: 1.4.0
       nth-check: 2.1.1
-      postcss-selector-parser: 6.1.0
-      semver: 7.6.2
+      postcss-selector-parser: 6.1.2
+      semver: 7.7.3
       vue-eslint-parser: 9.4.3(eslint@8.57.1)
       xml-name-validator: 4.0.0
     transitivePeerDependencies:
@@ -2162,8 +2173,8 @@ packages:
       pathe: 1.1.2
     dev: true
 
-  /postcss-selector-parser@6.1.0:
-    resolution: {integrity: sha512-UMz42UD0UY0EApS0ZL9o1XnLhSTtvvvLe5Dc2H2O56fvRZi+KulDyf5ctDhhtYJBGKStV2FL1fy6253cmLgqVQ==}
+  /postcss-selector-parser@6.1.2:
+    resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
     engines: {node: '>=4'}
     dependencies:
       cssesc: 3.0.0
@@ -2300,6 +2311,12 @@ packages:
 
   /semver@7.6.2:
     resolution: {integrity: sha512-FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==}
+    engines: {node: '>=10'}
+    hasBin: true
+    dev: true
+
+  /semver@7.7.3:
+    resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
     engines: {node: '>=10'}
     hasBin: true
     dev: true
