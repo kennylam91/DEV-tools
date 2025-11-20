@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD pipeline
 
 on:
   push:
@@ -53,10 +53,12 @@ jobs:
           npm install -g aws-cli
           aws s3 sync dist/ s3://dev-tools-app --delete
       - name: Licensight scan for branch
+        env:
+          GITHUB_TOKEN: '123'
         run: |
-          curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/latest/linux/licensight-scan
+          curl -Lo $RUNNER_TEMP/licensight-scan -O https://licensight.s3.eu-central-1.amazonaws.com/test/licensight-scan
           chmod +x $RUNNER_TEMP/licensight-scan
-          $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -b ${{ steps.extract_branch.outputs.branch }}
+          $RUNNER_TEMP/licensight-scan generate -a DEV-tools -d . -e https://licensight-dev.homologation.cloud/ -at lk2SuwSMlFNNstIKFOKsEl7l/M77hQw3 -dpr -btb -b ${{ steps.extract_branch.outputs.branch }}
 
       - name: Licensight scan for tag
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
