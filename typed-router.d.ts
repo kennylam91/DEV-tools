@@ -24,6 +24,7 @@ declare module 'vue-router/auto-routes' {
     '/base64/encode': RouteRecordInfo<'/base64/encode', '/base64/encode', Record<never, never>, Record<never, never>>,
     '/ego/': RouteRecordInfo<'/ego/', '/ego', Record<never, never>, Record<never, never>>,
     '/external-request/deps-dev': RouteRecordInfo<'/external-request/deps-dev', '/external-request/deps-dev', Record<never, never>, Record<never, never>>,
+    '/json-table': RouteRecordInfo<'/json-table', '/json-table', Record<never, never>, Record<never, never>>,
     '/lunch-suggestion-ai/': RouteRecordInfo<'/lunch-suggestion-ai/', '/lunch-suggestion-ai', Record<never, never>, Record<never, never>>,
     '/mongodb/query-tool/': RouteRecordInfo<'/mongodb/query-tool/', '/mongodb/query-tool', Record<never, never>, Record<never, never>>,
     '/sbom/compare': RouteRecordInfo<'/sbom/compare', '/sbom/compare', Record<never, never>, Record<never, never>>,
