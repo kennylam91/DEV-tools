@@ -29,6 +29,7 @@ declare module 'vue-router/auto-routes' {
     '/quiz/': RouteRecordInfo<'/quiz/', '/quiz', Record<never, never>, Record<never, never>>,
     '/sbom/compare': RouteRecordInfo<'/sbom/compare', '/sbom/compare', Record<never, never>, Record<never, never>>,
     '/sbom/relationship': RouteRecordInfo<'/sbom/relationship', '/sbom/relationship', Record<never, never>, Record<never, never>>,
+    '/vcpkg/package-retrieval': RouteRecordInfo<'/vcpkg/package-retrieval', '/vcpkg/package-retrieval', Record<never, never>, Record<never, never>>,
     '/work-logs': RouteRecordInfo<'/work-logs', '/work-logs', Record<never, never>, Record<never, never>>,
   }
 }

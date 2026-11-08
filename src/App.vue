@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
 const items = ref([
   {
     label: 'Home',
@@ -39,8 +43,16 @@ const items = ref([
   {
     label: 'Mongodb',
     items: [{ label: 'Query tool', route: '/mongodb/query-tool' }]
+  },
+  {
+    label: 'Vcpkg',
+    items: [{ label: 'Package Retrieval', route: '/vcpkg/package-retrieval' }]
   }
 ])
+
+const isActive = (itemRoute: string) => {
+  return route.path === itemRoute
+}
 
 defineProps<{}>()
 </script>
@@ -50,7 +62,13 @@ defineProps<{}>()
     <Menu :model="items">
       <template #item="{ item, props }">
         <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
-          <a v-ripple :href="href" v-bind="props.action" @click="navigate">
+          <a
+            v-ripple
+            :href="href"
+            v-bind="props.action"
+            :class="{ 'active-menu-item': isActive(item.route) }"
+            @click="navigate"
+          >
             <span :class="item.icon" />
             <span class="ml-2">{{ item.label }}</span>
           </a>
@@ -67,4 +85,9 @@ defineProps<{}>()
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.active-menu-item {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+</style>
