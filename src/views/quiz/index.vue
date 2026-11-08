@@ -5,20 +5,38 @@ import { getQuizService } from '@/services/quiz-service'
 const quizService = getQuizService()
 const quizSets = ref<QuizSet[]>(quizService.getSets())
 const selectedSetId = ref<string | null>(null)
+const selectedTestSetIds = ref<string[]>([])
 const editingSetId = ref<string | null>(null)
+const isSetFormVisible = ref(false)
 const setName = ref('')
 const selectedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const errorMessage = ref('')
 const practiceQuestionIndex = ref(0)
+const practiceQuestionCount = ref(0)
+const practiceQuestions = ref<QuizQuestion[]>([])
+const practiceStarted = ref(false)
 const selectedAnswer = ref('')
 const practiceScore = ref(0)
 const practiceComplete = ref(false)
 const results = ref<QuizResult[]>([])
 
 const selectedSet = computed(() => quizSets.value.find((set) => set.id === selectedSetId.value) ?? null)
+const selectedTestSets = computed(() =>
+  quizSets.value.filter((quizSet) => selectedTestSetIds.value.includes(quizSet.id))
+)
+const availableTestQuestions = computed(() =>
+  selectedTestSets.value.reduce((questions, quizSet) => questions.concat(quizSet.questions), [] as QuizQuestion[])
+)
+const minimumPracticeQuestionCount = computed(() =>
+  selectedTestSetIds.value.length ? selectedTestSetIds.value.length : 1
+)
+const activePracticeTitle = computed(() =>
+  selectedTestSetIds.value.length ? 'Mixed test' : `Practice: ${selectedSet.value?.name ?? ''}`
+)
+const isPracticeMode = computed(() => practiceStarted.value || practiceComplete.value)
 const currentQuestion = computed<QuizQuestion | null>(
-  () => selectedSet.value?.questions[practiceQuestionIndex.value] ?? null
+  () => practiceQuestions.value[practiceQuestionIndex.value] ?? null
 )
 const averageScore = computed(() => {
   if (!results.value.length) return 0
@@ -33,6 +51,7 @@ const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 const resetForm = () => {
   editingSetId.value = null
+  isSetFormVisible.value = false
   setName.value = ''
   selectedFile.value = null
   if (fileInput.value) fileInput.value.value = ''
@@ -40,11 +59,13 @@ const resetForm = () => {
 
 const startCreate = () => {
   resetForm()
+  isSetFormVisible.value = true
   errorMessage.value = ''
 }
 
 const startEdit = (quizSet: QuizSet) => {
   editingSetId.value = quizSet.id
+  isSetFormVisible.value = true
   setName.value = quizSet.name
   selectedFile.value = null
   errorMessage.value = ''
@@ -93,11 +114,11 @@ const parseCsv = (csv: string): QuizQuestion[] => {
     'optiona',
     'optionb',
     'optionc',
-    'optiond',
-    'correctanswerr',
-    'explaination'
+    'optiond'
   ]
   const missing = required.filter((header) => !headers.includes(header))
+  const requiredQuestionHeaders = ['correctanswer', 'explanation']
+  missing.push(...requiredQuestionHeaders.filter((header) => !headers.includes(header)))
   if (missing.length) throw new Error(`Missing CSV columns: ${missing.join(', ')}`)
 
   const indexOf = (header: string) => headers.indexOf(header)
@@ -106,7 +127,7 @@ const parseCsv = (csv: string): QuizQuestion[] => {
     const options = ['optiona', 'optionb', 'optionc', 'optiond'].map(
       (header) => values[indexOf(header)] ?? ''
     ) as [string, string, string, string]
-    const rawCorrectAnswer = values[indexOf('correctanswerr')] ?? ''
+    const rawCorrectAnswer = values[indexOf('correctanswer')] ?? ''
     const answerIndex = ['a', 'b', 'c', 'd'].indexOf(rawCorrectAnswer.toLowerCase())
     const correctAnswer = answerIndex >= 0 ? options[answerIndex] : rawCorrectAnswer
     if (!question || options.some((option) => !option) || !correctAnswer) {
@@ -117,7 +138,7 @@ const parseCsv = (csv: string): QuizQuestion[] => {
       question,
       options,
       correctAnswer,
-      explanation: values[indexOf('explaination')] ?? ''
+      explanation: values[indexOf('explanation')] ?? ''
     }
   })
 }
@@ -182,6 +203,10 @@ const downloadCsv = (quizSet: QuizSet) => {
 
 const startPractice = (quizSet: QuizSet) => {
   selectedSetId.value = quizSet.id
+  selectedTestSetIds.value = []
+  practiceQuestionCount.value = quizSet.questions.length
+  practiceQuestions.value = []
+  practiceStarted.value = false
   practiceQuestionIndex.value = 0
   practiceScore.value = 0
   selectedAnswer.value = ''
@@ -189,19 +214,58 @@ const startPractice = (quizSet: QuizSet) => {
   results.value = quizService.getResults(quizSet.id)
 }
 
+const startMixedTest = () => {
+  selectedSetId.value = null
+  practiceQuestionCount.value = availableTestQuestions.value.length
+  practiceQuestions.value = []
+  practiceStarted.value = false
+  practiceQuestionIndex.value = 0
+  practiceScore.value = 0
+  selectedAnswer.value = ''
+  practiceComplete.value = false
+  results.value = []
+}
+
+const beginPractice = () => {
+  const questionPool = selectedTestSetIds.value.length
+    ? selectedTestSets.value.flatMap((quizSet) => quizSet.questions)
+    : selectedSet.value?.questions ?? []
+  if (!questionPool.length) return
+  const questions =
+    selectedTestSetIds.value.length > 1
+      ? selectedTestSets.value.map((quizSet) => quizSet.questions[0]).concat(questionPool.slice(selectedTestSetIds.value.length))
+      : questionPool
+  practiceQuestions.value = questions.slice(0, practiceQuestionCount.value)
+  practiceStarted.value = true
+  practiceQuestionIndex.value = 0
+  practiceScore.value = 0
+  selectedAnswer.value = ''
+  practiceComplete.value = false
+}
+
+const exitPractice = () => {
+  selectedSetId.value = null
+  selectedTestSetIds.value = []
+  practiceQuestions.value = []
+  practiceStarted.value = false
+  practiceComplete.value = false
+}
+
 const submitAnswer = () => {
   if (!currentQuestion.value || !selectedAnswer.value) return
   if (selectedAnswer.value === currentQuestion.value.correctAnswer) practiceScore.value += 1
-  if (practiceQuestionIndex.value === selectedSet.value!.questions.length - 1) {
-    const result: QuizResult = {
-      id: makeId(),
-      quizSetId: selectedSet.value!.id,
-      score: practiceScore.value + (selectedAnswer.value === currentQuestion.value.correctAnswer ? 1 : 0),
-      total: selectedSet.value!.questions.length,
-      completedAt: new Date().toISOString()
+  if (practiceQuestionIndex.value === practiceQuestions.value.length - 1) {
+    if (selectedSet.value) {
+      const result: QuizResult = {
+        id: makeId(),
+        quizSetId: selectedSet.value.id,
+        score: practiceScore.value + (selectedAnswer.value === currentQuestion.value.correctAnswer ? 1 : 0),
+        total: practiceQuestions.value.length,
+        completedAt: new Date().toISOString()
+      }
+      quizService.saveResult(result)
+      results.value = quizService.getResults(selectedSet.value.id)
     }
-    quizService.saveResult(result)
-    results.value = quizService.getResults(selectedSet.value!.id)
     practiceComplete.value = true
   } else {
     practiceQuestionIndex.value += 1
@@ -227,8 +291,8 @@ watch(selectedSetId, (id) => {
     <div v-if="errorMessage" class="p-message p-message-error mb-3">{{ errorMessage }}</div>
 
     <div class="grid">
-      <div class="col-12 lg:col-5">
-        <Card>
+      <div v-if="!isPracticeMode" class="col-12 lg:col-5">
+        <Card v-if="isSetFormVisible">
           <template #title>{{ editingSetId ? 'Update quiz set' : 'Create quiz set' }}</template>
           <template #content>
             <div class="flex flex-column gap-2 mb-3">
@@ -246,7 +310,7 @@ watch(selectedSetId, (id) => {
                 @change="onFileSelected"
               />
               <small class="text-color-secondary">
-                Question,OptionA,OptionB,OptionC,OptionD,CorrectAnswerr,Explaination
+                Question,OptionA,OptionB,OptionC,OptionD,CorrectAnswer,Explanation
               </small>
               <small v-if="editingSetId && !selectedFile" class="text-color-secondary">
                 Leave empty to keep the current imported file.
@@ -265,6 +329,27 @@ watch(selectedSetId, (id) => {
           <template #title>Quiz sets</template>
           <template #content>
             <div v-if="!quizSets.length" class="text-color-secondary">No quiz sets yet.</div>
+            <div v-if="quizSets.length > 1" class="mb-4 p-3 surface-50 border-round">
+              <div class="font-medium mb-2">Create a mixed test</div>
+              <p class="text-color-secondary mt-0">
+                Practice questions from multiple quiz sets in one test.
+              </p>
+              <MultiSelect
+                v-model="selectedTestSetIds"
+                :options="quizSets"
+                option-label="name"
+                option-value="id"
+                placeholder="Select at least two quiz sets"
+                class="w-full mb-2"
+                :max-selected-labels="2"
+              />
+              <Button
+                label="Configure mixed test"
+                icon="pi pi-play"
+                :disabled="selectedTestSetIds.length < 2"
+                @click="startMixedTest"
+              />
+            </div>
             <div v-for="quizSet in quizSets" :key="quizSet.id" class="quiz-set-row">
               <div>
                 <strong>{{ quizSet.name }}</strong>
@@ -290,19 +375,65 @@ watch(selectedSetId, (id) => {
         </Card>
       </div>
 
-      <div class="col-12 lg:col-7">
-        <Card v-if="selectedSet">
-          <template #title>Practice: {{ selectedSet.name }}</template>
+      <div :class="isPracticeMode ? 'col-12' : 'col-12 lg:col-7'">
+        <Card v-if="selectedSet || selectedTestSetIds.length">
+          <template #title>
+            <div class="flex justify-content-between align-items-center gap-2">
+              <span>{{ activePracticeTitle }}</span>
+              <Button
+                v-if="isPracticeMode"
+                label="Exit practice"
+                icon="pi pi-times"
+                severity="secondary"
+                text
+                @click="exitPractice"
+              />
+            </div>
+          </template>
           <template #content>
             <div v-if="practiceComplete" class="text-center py-4">
               <i class="pi pi-check-circle text-green-500 text-5xl"></i>
               <h2 class="mb-2">Practice complete</h2>
-              <p class="text-xl mt-0">You scored {{ practiceScore }} / {{ selectedSet.questions.length }}</p>
-              <Button label="Try again" icon="pi pi-refresh" @click="startPractice(selectedSet)" />
+              <p class="text-xl mt-0">You scored {{ practiceScore }} / {{ practiceQuestions.length }}</p>
+              <Button
+                label="Try again"
+                icon="pi pi-refresh"
+                @click="selectedSet ? startPractice(selectedSet) : startMixedTest()"
+              />
+            </div>
+            <div v-else-if="!practiceStarted">
+              <p class="mt-0">How many questions would you like to practice?</p>
+              <div class="flex flex-column gap-2">
+                <label for="practice-question-count">Number of questions</label>
+                <InputNumber
+                  id="practice-question-count"
+                  v-model="practiceQuestionCount"
+                  :min="minimumPracticeQuestionCount"
+                  :max="selectedTestSetIds.length ? availableTestQuestions.length : selectedSet?.questions.length"
+                  show-buttons
+                />
+                <small class="text-color-secondary">
+                  Choose between 1 and
+                  {{ selectedTestSetIds.length ? availableTestQuestions.length : selectedSet?.questions.length }}
+                  questions.
+                </small>
+              </div>
+              <Button
+                class="mt-4"
+                label="Start practice"
+                icon="pi pi-play"
+                :disabled="
+                  !practiceQuestionCount ||
+                  practiceQuestionCount < minimumPracticeQuestionCount ||
+                  practiceQuestionCount >
+                    (selectedTestSetIds.length ? availableTestQuestions.length : selectedSet?.questions.length)
+                "
+                @click="beginPractice"
+              />
             </div>
             <div v-else-if="currentQuestion">
               <div class="flex justify-content-between text-color-secondary mb-3">
-                <span>Question {{ practiceQuestionIndex + 1 }} of {{ selectedSet.questions.length }}</span>
+                <span>Question {{ practiceQuestionIndex + 1 }} of {{ practiceQuestions.length }}</span>
                 <span>Score: {{ practiceScore }}</span>
               </div>
               <h3>{{ currentQuestion.question }}</h3>
@@ -325,7 +456,7 @@ watch(selectedSetId, (id) => {
           </template>
         </Card>
 
-        <Card v-if="selectedSet" class="mt-3">
+        <Card v-if="selectedSet && !selectedTestSetIds.length && !isPracticeMode" class="mt-3">
           <template #title>Practice results</template>
           <template #content>
             <p class="mt-0">Average score: <strong>{{ averageScore }}%</strong></p>
