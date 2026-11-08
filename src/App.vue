@@ -11,6 +11,11 @@ const items = ref([
     route: '/work-logs'
   },
   {
+    label: 'Quiz',
+    icon: 'pi pi-list-check',
+    route: '/quiz'
+  },
+  {
     label: 'Base64',
     items: [
       { label: 'Encode', route: '/base64/encode' },
