@@ -4,6 +4,7 @@ export interface QuizQuestion {
   options: [string, string, string, string]
   correctAnswer: string
   explanation: string
+  markedForReview?: boolean
 }
 
 export interface QuizSet {
