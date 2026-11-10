@@ -18,6 +18,8 @@ const practiceQuestions = ref<QuizQuestion[]>([])
 const practiceStarted = ref(false)
 const selectedAnswer = ref('')
 const practiceScore = ref(0)
+const failedQuestions = ref<Array<{ question: QuizQuestion; answer: string }>>([])
+const reviewSetId = ref<string | null>(null)
 const practiceComplete = ref(false)
 const results = ref<QuizResult[]>([])
 
@@ -34,7 +36,12 @@ const minimumPracticeQuestionCount = computed(() =>
 const activePracticeTitle = computed(() =>
   selectedTestSetIds.value.length ? 'Mixed test' : `Practice: ${selectedSet.value?.name ?? ''}`
 )
-const isPracticeMode = computed(() => practiceStarted.value || practiceComplete.value)
+const isPracticeMode = computed(
+  () => practiceStarted.value || practiceComplete.value || reviewSetId.value !== null
+)
+const markedQuestions = computed(
+  () => selectedSet.value?.questions.filter((question) => question.markedForReview) ?? []
+)
 const currentQuestion = computed<QuizQuestion | null>(
   () => practiceQuestions.value[practiceQuestionIndex.value] ?? null
 )
@@ -48,6 +55,48 @@ const averageScore = computed(() => {
 })
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+const shuffleQuestions = (questions: QuizQuestion[]) => {
+  const shuffled = [...questions]
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    const question = shuffled[index]
+    shuffled[index] = shuffled[randomIndex]
+    shuffled[randomIndex] = question
+  }
+  return shuffled
+}
+
+const toggleQuestionReview = (question: QuizQuestion) => {
+  const quizSet = quizSets.value.find((set) =>
+    set.questions.some((setQuestion) => setQuestion.id === question.id)
+  )
+  if (!quizSet) return
+
+  const markedForReview = !question.markedForReview
+  const updatedSet: QuizSet = {
+    ...quizSet,
+    questions: quizSet.questions.map((setQuestion) =>
+      setQuestion.id === question.id
+        ? { ...setQuestion, markedForReview }
+        : setQuestion
+    ),
+    updatedAt: new Date().toISOString()
+  }
+  quizService.saveSet(updatedSet)
+  quizSets.value = quizService.getSets()
+  practiceQuestions.value = practiceQuestions.value.map((practiceQuestion) =>
+    practiceQuestion.id === question.id ? { ...practiceQuestion, markedForReview } : practiceQuestion
+  )
+}
+
+const showMarkedQuestions = (quizSet: QuizSet) => {
+  selectedSetId.value = quizSet.id
+  selectedTestSetIds.value = []
+  practiceStarted.value = false
+  practiceComplete.value = false
+  reviewSetId.value = quizSet.id
+}
 
 const resetForm = () => {
   editingSetId.value = null
@@ -203,12 +252,14 @@ const downloadCsv = (quizSet: QuizSet) => {
 
 const startPractice = (quizSet: QuizSet) => {
   selectedSetId.value = quizSet.id
+  reviewSetId.value = null
   selectedTestSetIds.value = []
   practiceQuestionCount.value = quizSet.questions.length
   practiceQuestions.value = []
   practiceStarted.value = false
   practiceQuestionIndex.value = 0
   practiceScore.value = 0
+  failedQuestions.value = []
   selectedAnswer.value = ''
   practiceComplete.value = false
   results.value = quizService.getResults(quizSet.id)
@@ -216,29 +267,35 @@ const startPractice = (quizSet: QuizSet) => {
 
 const startMixedTest = () => {
   selectedSetId.value = null
+  reviewSetId.value = null
   practiceQuestionCount.value = availableTestQuestions.value.length
   practiceQuestions.value = []
   practiceStarted.value = false
   practiceQuestionIndex.value = 0
   practiceScore.value = 0
+  failedQuestions.value = []
   selectedAnswer.value = ''
   practiceComplete.value = false
   results.value = []
 }
 
 const beginPractice = () => {
-  const questionPool = selectedTestSetIds.value.length
-    ? selectedTestSets.value.flatMap((quizSet) => quizSet.questions)
-    : selectedSet.value?.questions ?? []
-  if (!questionPool.length) return
-  const questions =
-    selectedTestSetIds.value.length > 1
-      ? selectedTestSets.value.map((quizSet) => quizSet.questions[0]).concat(questionPool.slice(selectedTestSetIds.value.length))
-      : questionPool
+  const questionSets = selectedTestSetIds.value.length
+    ? selectedTestSets.value.map((quizSet) => shuffleQuestions(quizSet.questions))
+    : [shuffleQuestions(selectedSet.value?.questions ?? [])]
+  if (!questionSets.some((questions) => questions.length)) return
+
+  const questions = selectedTestSetIds.value.length
+    ? shuffleQuestions([
+        ...questionSets.flatMap((questions) => questions.slice(0, 1)),
+        ...shuffleQuestions(questionSets.flatMap((questions) => questions.slice(1)))
+      ])
+    : questionSets[0]
   practiceQuestions.value = questions.slice(0, practiceQuestionCount.value)
   practiceStarted.value = true
   practiceQuestionIndex.value = 0
   practiceScore.value = 0
+  failedQuestions.value = []
   selectedAnswer.value = ''
   practiceComplete.value = false
 }
@@ -246,20 +303,27 @@ const beginPractice = () => {
 const exitPractice = () => {
   selectedSetId.value = null
   selectedTestSetIds.value = []
+  reviewSetId.value = null
   practiceQuestions.value = []
   practiceStarted.value = false
+  failedQuestions.value = []
   practiceComplete.value = false
 }
 
 const submitAnswer = () => {
-  if (!currentQuestion.value || !selectedAnswer.value) return
-  if (selectedAnswer.value === currentQuestion.value.correctAnswer) practiceScore.value += 1
+  const question = currentQuestion.value
+  if (!question || !selectedAnswer.value) return
+  if (selectedAnswer.value === question.correctAnswer) {
+    practiceScore.value += 1
+  } else {
+    failedQuestions.value.push({ question, answer: selectedAnswer.value })
+  }
   if (practiceQuestionIndex.value === practiceQuestions.value.length - 1) {
     if (selectedSet.value) {
       const result: QuizResult = {
         id: makeId(),
         quizSetId: selectedSet.value.id,
-        score: practiceScore.value + (selectedAnswer.value === currentQuestion.value.correctAnswer ? 1 : 0),
+        score: practiceScore.value,
         total: practiceQuestions.value.length,
         completedAt: new Date().toISOString()
       }
@@ -358,6 +422,14 @@ watch(selectedSetId, (id) => {
                 </div>
               </div>
               <div class="flex gap-1">
+                <Button
+                  :label="`Marked (${quizSet.questions.filter((question) => question.markedForReview).length})`"
+                  icon="pi pi-bookmark"
+                  text
+                  :disabled="!quizSet.questions.some((question) => question.markedForReview)"
+                  :aria-label="`Review marked questions for ${quizSet.name}`"
+                  @click="showMarkedQuestions(quizSet)"
+                />
                 <Button icon="pi pi-play" text rounded aria-label="Practice" @click="startPractice(quizSet)" />
                 <Button
                   v-if="quizSet.csvContent"
@@ -391,15 +463,65 @@ watch(selectedSetId, (id) => {
             </div>
           </template>
           <template #content>
-            <div v-if="practiceComplete" class="text-center py-4">
-              <i class="pi pi-check-circle text-green-500 text-5xl"></i>
-              <h2 class="mb-2">Practice complete</h2>
-              <p class="text-xl mt-0">You scored {{ practiceScore }} / {{ practiceQuestions.length }}</p>
-              <Button
-                label="Try again"
-                icon="pi pi-refresh"
-                @click="selectedSet ? startPractice(selectedSet) : startMixedTest()"
-              />
+            <div v-if="reviewSetId" class="py-4">
+              <h2 class="mt-0">Marked questions</h2>
+              <p v-if="!markedQuestions.length" class="text-color-secondary">
+                No questions marked for review.
+              </p>
+              <div
+                v-for="(question, index) in markedQuestions"
+                :key="question.id"
+                class="failed-question surface-50 border-round p-3 mb-3"
+              >
+                <div class="flex justify-content-between align-items-start gap-2">
+                  <h3 class="mt-0 mb-2">{{ index + 1 }}. {{ question.question }}</h3>
+                  <Button
+                    icon="pi pi-bookmark-fill"
+                    text
+                    rounded
+                    aria-label="Remove question from review"
+                    @click="toggleQuestionReview(question)"
+                  />
+                </div>
+                <ul class="mt-0">
+                  <li v-for="option in question.options" :key="option">
+                    {{ option }}<strong v-if="option === question.correctAnswer"> (correct answer)</strong>
+                  </li>
+                </ul>
+                <p v-if="question.explanation" class="mb-0">
+                  <strong>Explanation:</strong> {{ question.explanation }}
+                </p>
+              </div>
+            </div>
+            <div v-else-if="practiceComplete" class="py-4">
+              <div class="text-center">
+                <i class="pi pi-check-circle text-green-500 text-5xl"></i>
+                <h2 class="mb-2">Practice complete</h2>
+                <p class="text-xl mt-0">You scored {{ practiceScore }} / {{ practiceQuestions.length }}</p>
+                <Button
+                  label="Try again"
+                  icon="pi pi-refresh"
+                  @click="selectedSet ? startPractice(selectedSet) : startMixedTest()"
+                />
+              </div>
+              <div class="mt-4">
+                <h3>Review failed questions</h3>
+                <p v-if="!failedQuestions.length" class="text-color-secondary">
+                  Great job — you answered every question correctly.
+                </p>
+                <div
+                  v-for="({ question, answer }, index) in failedQuestions"
+                  :key="question.id"
+                  class="failed-question surface-50 border-round p-3 mb-3"
+                >
+                  <h4 class="mt-0 mb-2">{{ index + 1 }}. {{ question.question }}</h4>
+                  <p class="mb-1"><strong>Your answer:</strong> {{ answer }}</p>
+                  <p class="mb-1"><strong>Correct answer:</strong> {{ question.correctAnswer }}</p>
+                  <p v-if="question.explanation" class="mb-0">
+                    <strong>Explanation:</strong> {{ question.explanation }}
+                  </p>
+                </div>
+              </div>
             </div>
             <div v-else-if="!practiceStarted">
               <p class="mt-0">How many questions would you like to practice?</p>
@@ -437,6 +559,14 @@ watch(selectedSetId, (id) => {
                 <span>Score: {{ practiceScore }}</span>
               </div>
               <h3>{{ currentQuestion.question }}</h3>
+              <Button
+                :label="currentQuestion.markedForReview ? 'Marked for later' : 'Mark for later'"
+                :icon="currentQuestion.markedForReview ? 'pi pi-bookmark-fill' : 'pi pi-bookmark'"
+                text
+                class="mb-3"
+                :aria-pressed="currentQuestion.markedForReview"
+                @click="toggleQuestionReview(currentQuestion)"
+              />
               <div class="flex flex-column gap-2">
                 <div v-for="option in currentQuestion.options" :key="option" class="flex align-items-center">
                   <RadioButton v-model="selectedAnswer" :input-id="option" name="quiz-answer" :value="option" />
@@ -487,5 +617,9 @@ watch(selectedSetId, (id) => {
 
 .quiz-set-row:last-child {
   border-bottom: 0;
+}
+
+.failed-question {
+  border-left: 3px solid var(--red-500);
 }
 </style>
