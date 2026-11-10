@@ -1,4 +1,4 @@
-import 'vue3-json-viewer/dist/index.css'
+import 'vue3-json-viewer/dist/vue3-json-viewer.css'
 import './assets/main.css'
 // import 'highlight.js/styles/monokai.css'
 import '/node_modules/primeflex/primeflex.css'
