@@ -17,8 +17,9 @@ const practiceQuestionCount = ref(0)
 const practiceQuestions = ref<QuizQuestion[]>([])
 const practiceStarted = ref(false)
 const selectedAnswer = ref('')
+const selectedAnswers = ref<string[]>([])
 const practiceScore = ref(0)
-const failedQuestions = ref<Array<{ question: QuizQuestion; answer: string }>>([])
+const failedQuestions = ref<Array<{ question: QuizQuestion; answer: string | string[] }>>([])
 const reviewSetId = ref<string | null>(null)
 const practiceComplete = ref(false)
 const results = ref<QuizResult[]>([])
@@ -55,6 +56,50 @@ const averageScore = computed(() => {
 })
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+const getQuestionCorrectAnswers = (question: QuizQuestion): string[] => {
+  if (Array.isArray(question.correctAnswer)) return question.correctAnswer.filter(Boolean)
+  return question.correctAnswer ? [question.correctAnswer] : []
+}
+
+const isMultiSelectQuestion = (question: QuizQuestion) => getQuestionCorrectAnswers(question).length > 1
+
+const parseAnswerValues = (rawValue: string, options: readonly string[]) => {
+  if (!rawValue.trim()) return []
+
+  const normalizedValue = rawValue.replace(/\s+/g, '')
+  const values = /^[A-Da-d]+$/.test(normalizedValue)
+    ? normalizedValue.split('').map((value) => value.trim()).filter(Boolean)
+    : normalizedValue
+        .split(/[|;,]/)
+        .map((value) => value.trim())
+        .filter(Boolean)
+
+  return [...new Set(
+    values.flatMap((value) => {
+      const normalized = value.toLowerCase()
+      const optionIndex = ['a', 'b', 'c', 'd'].indexOf(normalized)
+      if (optionIndex >= 0) return [options[optionIndex] ?? value]
+
+      const matchingOption = options.find(
+        (option) => option.trim().toLowerCase() === normalized
+      )
+      return matchingOption ? [matchingOption] : [value]
+    })
+  )]
+}
+
+const normalizeSubmittedAnswer = (answer: string | string[]) =>
+  Array.isArray(answer) ? [...answer].sort() : [answer].filter(Boolean)
+
+const isSubmittedAnswerCorrect = (question: QuizQuestion, submittedAnswer: string | string[]) => {
+  const correctAnswers = getQuestionCorrectAnswers(question)
+  const expectedAnswer = normalizeSubmittedAnswer(submittedAnswer)
+  const actualAnswer = [...correctAnswers].sort()
+
+  if (expectedAnswer.length !== actualAnswer.length) return false
+  return expectedAnswer.every((answer) => actualAnswer.includes(answer))
+}
 
 const shuffleQuestions = (questions: QuizQuestion[]) => {
   const shuffled = [...questions]
@@ -158,16 +203,11 @@ const parseCsv = (csv: string): QuizQuestion[] => {
 
   if (rows.length < 2) throw new Error('The CSV must include a header and at least one question.')
   const headers = rows[0].map((header) => header.toLowerCase())
-  const required = [
-    'question',
-    'optiona',
-    'optionb',
-    'optionc',
-    'optiond'
-  ]
+  const required = ['question', 'optiona', 'optionb', 'optionc', 'optiond']
+  const answerHeader = headers.find((header) => ['correctanswer', 'correctanswers'].includes(header))
   const missing = required.filter((header) => !headers.includes(header))
-  const requiredQuestionHeaders = ['correctanswer', 'explanation']
-  missing.push(...requiredQuestionHeaders.filter((header) => !headers.includes(header)))
+  if (!answerHeader) missing.push('correctanswer')
+  if (!headers.includes('explanation')) missing.push('explanation')
   if (missing.length) throw new Error(`Missing CSV columns: ${missing.join(', ')}`)
 
   const indexOf = (header: string) => headers.indexOf(header)
@@ -176,9 +216,18 @@ const parseCsv = (csv: string): QuizQuestion[] => {
     const options = ['optiona', 'optionb', 'optionc', 'optiond'].map(
       (header) => values[indexOf(header)] ?? ''
     ) as [string, string, string, string]
-    const rawCorrectAnswer = values[indexOf('correctanswer')] ?? ''
-    const answerIndex = ['a', 'b', 'c', 'd'].indexOf(rawCorrectAnswer.toLowerCase())
-    const correctAnswer = answerIndex >= 0 ? options[answerIndex] : rawCorrectAnswer
+
+    const answerIndex = answerHeader ? indexOf(answerHeader) : -1
+    const explanationIndex = indexOf('explanation')
+    const rawCorrectAnswer =
+      answerIndex >= 0 && values.length > headers.length
+        ? values.slice(answerIndex, -1).join(',')
+        : answerHeader
+          ? values[answerIndex] ?? ''
+          : ''
+    const correctAnswers = parseAnswerValues(rawCorrectAnswer, options)
+    const correctAnswer = correctAnswers.length > 1 ? correctAnswers : correctAnswers[0] ?? ''
+
     if (!question || options.some((option) => !option) || !correctAnswer) {
       throw new Error(`Question row ${index + 2} is incomplete.`)
     }
@@ -187,7 +236,10 @@ const parseCsv = (csv: string): QuizQuestion[] => {
       question,
       options,
       correctAnswer,
-      explanation: values[indexOf('explanation')] ?? ''
+      explanation:
+        values.length > headers.length && explanationIndex >= 0
+          ? values[values.length - 1] ?? ''
+          : values[explanationIndex] ?? ''
     }
   })
 }
@@ -261,6 +313,7 @@ const startPractice = (quizSet: QuizSet) => {
   practiceScore.value = 0
   failedQuestions.value = []
   selectedAnswer.value = ''
+  selectedAnswers.value = []
   practiceComplete.value = false
   results.value = quizService.getResults(quizSet.id)
 }
@@ -275,6 +328,7 @@ const startMixedTest = () => {
   practiceScore.value = 0
   failedQuestions.value = []
   selectedAnswer.value = ''
+  selectedAnswers.value = []
   practiceComplete.value = false
   results.value = []
 }
@@ -297,6 +351,7 @@ const beginPractice = () => {
   practiceScore.value = 0
   failedQuestions.value = []
   selectedAnswer.value = ''
+  selectedAnswers.value = []
   practiceComplete.value = false
 }
 
@@ -307,17 +362,25 @@ const exitPractice = () => {
   practiceQuestions.value = []
   practiceStarted.value = false
   failedQuestions.value = []
+  selectedAnswer.value = ''
+  selectedAnswers.value = []
   practiceComplete.value = false
 }
 
 const submitAnswer = () => {
   const question = currentQuestion.value
-  if (!question || !selectedAnswer.value) return
-  if (selectedAnswer.value === question.correctAnswer) {
+  if (!question) return
+
+  const isMultiSelect = isMultiSelectQuestion(question)
+  const submittedAnswer = isMultiSelect ? selectedAnswers.value : selectedAnswer.value
+  if ((isMultiSelect && !submittedAnswer.length) || (!isMultiSelect && !submittedAnswer)) return
+
+  if (isSubmittedAnswerCorrect(question, submittedAnswer)) {
     practiceScore.value += 1
   } else {
-    failedQuestions.value.push({ question, answer: selectedAnswer.value })
+    failedQuestions.value.push({ question, answer: submittedAnswer })
   }
+
   if (practiceQuestionIndex.value === practiceQuestions.value.length - 1) {
     if (selectedSet.value) {
       const result: QuizResult = {
@@ -334,6 +397,7 @@ const submitAnswer = () => {
   } else {
     practiceQuestionIndex.value += 1
     selectedAnswer.value = ''
+    selectedAnswers.value = []
   }
 }
 
@@ -485,7 +549,7 @@ watch(selectedSetId, (id) => {
                 </div>
                 <ul class="mt-0">
                   <li v-for="option in question.options" :key="option">
-                    {{ option }}<strong v-if="option === question.correctAnswer"> (correct answer)</strong>
+                    {{ option }}<strong v-if="getQuestionCorrectAnswers(question).includes(option)"> (correct answer)</strong>
                   </li>
                 </ul>
                 <p v-if="question.explanation" class="mb-0">
@@ -515,8 +579,11 @@ watch(selectedSetId, (id) => {
                   class="failed-question surface-50 border-round p-3 mb-3"
                 >
                   <h4 class="mt-0 mb-2">{{ index + 1 }}. {{ question.question }}</h4>
-                  <p class="mb-1"><strong>Your answer:</strong> {{ answer }}</p>
-                  <p class="mb-1"><strong>Correct answer:</strong> {{ question.correctAnswer }}</p>
+                  <p class="mb-1"><strong>Your answer:</strong> {{ Array.isArray(answer) ? answer.join(', ') : answer }}</p>
+                  <p class="mb-1">
+                    <strong>Correct answer:</strong>
+                    {{ Array.isArray(question.correctAnswer) ? question.correctAnswer.join(', ') : question.correctAnswer }}
+                  </p>
                   <p v-if="question.explanation" class="mb-0">
                     <strong>Explanation:</strong> {{ question.explanation }}
                   </p>
@@ -567,13 +634,24 @@ watch(selectedSetId, (id) => {
                 :aria-pressed="currentQuestion.markedForReview"
                 @click="toggleQuestionReview(currentQuestion)"
               />
-              <div class="flex flex-column gap-2">
+              <div v-if="isMultiSelectQuestion(currentQuestion)" class="flex flex-column gap-2">
+                <div v-for="option in currentQuestion.options" :key="option" class="flex align-items-center">
+                  <Checkbox v-model="selectedAnswers" :input-id="option" :value="option" />
+                  <label :for="option" class="ml-2">{{ option }}</label>
+                </div>
+              </div>
+              <div v-else class="flex flex-column gap-2">
                 <div v-for="option in currentQuestion.options" :key="option" class="flex align-items-center">
                   <RadioButton v-model="selectedAnswer" :input-id="option" name="quiz-answer" :value="option" />
                   <label :for="option" class="ml-2">{{ option }}</label>
                 </div>
               </div>
-              <Button class="mt-4" label="Submit answer" :disabled="!selectedAnswer" @click="submitAnswer" />
+              <Button
+                class="mt-4"
+                label="Submit answer"
+                :disabled="isMultiSelectQuestion(currentQuestion) ? !selectedAnswers.length : !selectedAnswer"
+                @click="submitAnswer"
+              />
             </div>
           </template>
         </Card>
