@@ -419,7 +419,7 @@ watch(selectedSetId, (id) => {
     <div v-if="errorMessage" class="p-message p-message-error mb-3">{{ errorMessage }}</div>
 
     <div class="grid">
-      <div v-if="!isPracticeMode" class="col-12 lg:col-5">
+      <div v-if="!isPracticeMode" class="col-12 lg:col-6">
         <Card v-if="isSetFormVisible">
           <template #title>{{ editingSetId ? 'Update quiz set' : 'Create quiz set' }}</template>
           <template #content>
@@ -511,7 +511,7 @@ watch(selectedSetId, (id) => {
         </Card>
       </div>
 
-      <div :class="isPracticeMode ? 'col-12' : 'col-12 lg:col-7'">
+      <div :class="isPracticeMode ? 'col-12' : 'col-12 lg:col-6'">
         <Card v-if="selectedSet || selectedTestSetIds.length">
           <template #title>
             <div class="flex justify-content-between align-items-center gap-2">
