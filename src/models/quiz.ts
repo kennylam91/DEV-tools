@@ -2,7 +2,7 @@ export interface QuizQuestion {
   id: string
   question: string
   options: [string, string, string, string]
-  correctAnswer: string
+  correctAnswer: string | string[]
   explanation: string
   markedForReview?: boolean
 }
